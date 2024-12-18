@@ -1,5 +1,16 @@
 import React, { useContext, useState } from "react";
+import {
+  Box,
+  Button,
+  Checkbox,
+  List,
+  ListItem,
+  ListItemText,
+} from "@mui/material";
+import InputComponent from "@/src/components/InputComponent";
+import styles from "@/styles/home.module.scss";
 import TaskContext from "@/src/context/TaskContext";
+import ButtonComponent from "@/src/components/ButtonComponent";
 
 const Home = () => {
   const { tasks, dispatch } = useContext(TaskContext);
@@ -21,7 +32,12 @@ const Home = () => {
 
     dispatch({
       type: "ADD_TASK",
-      payload: { id: Date.now(), name: taskName, description },
+      payload: {
+        id: Date.now(),
+        name: taskName,
+        description,
+        completed: false,
+      },
     });
 
     // Clear the form
@@ -41,6 +57,7 @@ const Home = () => {
         id: editingTaskId,
         name: editedName,
         description: editedDescription,
+        completed: false,
       },
     });
 
@@ -65,105 +82,121 @@ const Home = () => {
   const sortedTasks = isSorted ? handleSort() : tasks;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Task Manager</h1>
-      <form onSubmit={handleAddTask} style={{ marginBottom: "20px" }}>
-        <div>
-          <label>
-            Task Name:
-            <input
-              type="text"
-              value={taskName}
-              onChange={(e) => setTaskName(e.target.value)}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Description:
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </label>
-        </div>
-        <button type="submit">Add Task</button>
+    <Box className={styles.container}>
+      <Box className={styles.header}>Task Manager</Box>
+      <form onSubmit={handleAddTask}>
+        <Box className={styles.formFields}>
+          <InputComponent
+            label="Task"
+            placeholder="Enter task"
+            value={taskName}
+            onChange={(e) => {
+              setTaskName(e.target.value);
+            }}
+            required={true}
+          />
+
+          <InputComponent
+            label="Description"
+            placeholder="Description"
+            value={description}
+            onChange={(e) => {
+              setDescription(e.target.value);
+            }}
+            multiline
+            maxRows={2}
+          />
+          <ButtonComponent text={"Add Task"} type={"submit"} />
+        </Box>
       </form>
 
-      {/* Sort Button */}
-      <button
-        onClick={() => {
-          setIsSorted(true);
-          setSortOrder(sortOrder === "asc" ? "desc" : "asc"); // Toggle sort order
-        }}
-      >
-        Sort Alphabetically ({sortOrder === "asc" ? "Ascending" : "Descending"})
-      </button>
-
-      {/* Revert to Original Order Button */}
-      <button onClick={() => setIsSorted(false)}>
-        Revert to Original Order
-      </button>
-
-      <h2>Tasks</h2>
-      <ul>
-        {sortedTasks.map((task) => (
-          <li
-            key={task.id}
-            style={{
-              textDecoration: task.completed ? "line-through" : "none",
-              backgroundColor: task.completed ? "red" : "transparent",
-              padding: "5px",
-              margin: "5px 0",
-              borderRadius: "4px",
+      <Box className={styles.result}>
+        <Box className={styles.resultHeader}>Tasks</Box>
+        <Box className={styles.sortContainer}>
+          {/* Sort Button */}
+          <ButtonComponent
+            text={"Sort Alphabetically"}
+            variant={"contained"}
+            onClick={() => {
+              setIsSorted(true);
+              setSortOrder(sortOrder === "asc" ? "desc" : "asc");
             }}
-          >
-            <input
-              type="checkbox"
-              checked={task.completed || false}
-              onChange={() =>
-                dispatch({
-                  type: "TOGGLE_TASK_COMPLETION",
-                  payload: { id: task.id },
-                })
-              }
-            />
-            {editingTaskId === task.id ? (
-              <div>
-                <input
-                  type="text"
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  placeholder="Edit Task Name"
-                />
-                <textarea
-                  value={editedDescription}
-                  onChange={(e) => setEditedDescription(e.target.value)}
-                  placeholder="Edit Description"
-                />
-                <button onClick={handleSave}>Save</button>
-                <button onClick={() => setEditingTaskId(null)}>Cancel</button>
-              </div>
-            ) : (
-              <span>
-                <strong>{task.name}</strong> -{" "}
-                {task.description || "No description"}
-                <button
-                  onClick={() => {
-                    setEditingTaskId(task.id);
-                    setEditedName(task.name);
-                    setEditedDescription(task.description || "");
+          />
+          <ButtonComponent
+            text={"Original Order"}
+            variant={"contained"}
+            onClick={() => setIsSorted(false)}
+          />
+        </Box>
+
+        {tasks.length > 0 ? (
+          <List>
+            {sortedTasks.map((task) => (
+              <ListItem disablePadding>
+                <Checkbox
+                  checked={task.completed}
+                  onChange={() => {
+                    dispatch({
+                      type: "TOGGLE_TASK_COMPLETION",
+                      payload: task.id,
+                    });
                   }}
-                >
-                  Edit
-                </button>
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
+                />
+                {editingTaskId === task.id ? (
+                  <>
+                    <InputComponent
+                      label="Task"
+                      placeholder="Edit task"
+                      value={editedName}
+                      onChange={(e) => setEditedName(e.target.value)}
+                      required={true}
+                    />
+                    <InputComponent
+                      label="Description"
+                      placeholder="Edit description"
+                      value={editedDescription}
+                      onChange={(e) => setEditedDescription(e.target.value)}
+                    />
+                    <ButtonComponent text={"Save"} onClick={handleSave} />
+                    <ButtonComponent
+                      text={"Cancel"}
+                      onClick={() => {
+                        setEditingTaskId(null);
+                      }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <ListItemText
+                      sx={{
+                        borderRadius: "4px",
+                        padding: "10px 5px",
+                        width: "400px",
+                        backgroundColor: task.completed
+                          ? "rgba(107, 199, 128, 0.73)"
+                          : "transparent",
+                      }}
+                      primary={task.name}
+                      secondary={task.description}
+                    />
+                    <ButtonComponent
+                      text={"Edit"}
+                      onClick={() => {
+                        setEditingTaskId(task.id);
+                        setEditedName(task.name);
+                        setEditedDescription(task.description);
+                      }}
+                    />
+                  </>
+                )}
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Box className={styles.notice}>Add some task</Box>
+        )}
+      </Box>
+    </Box>
   );
 };
 

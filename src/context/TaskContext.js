@@ -13,12 +13,13 @@ const taskReducer = (state, action) => {
               ...task,
               name: action.payload.name,
               description: action.payload.description,
+              completed: action.payload.completed,
             }
           : task
       );
     case "TOGGLE_TASK_COMPLETION":
       return state.map((task) =>
-        task.id === action.payload.id
+        task.id === action.payload
           ? { ...task, completed: !task.completed } // Toggle the 'completed' state
           : task
       );
