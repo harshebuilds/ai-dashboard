@@ -1,15 +1,10 @@
 import React, { useContext, useState } from "react";
-import {
-  Box,
-  Button,
-  Checkbox,
-  List,
-  ListItem,
-  ListItemText,
-} from "@mui/material";
+import { Box, Checkbox, List, ListItem, ListItemText } from "@mui/material";
+import ChartComponent from "@/src/components/ChartComponent";
 import InputComponent from "@/src/components/InputComponent";
 import styles from "@/styles/home.module.scss";
 import TaskContext from "@/src/context/TaskContext";
+import useWindowSize from "@/src/utils/useWindowSize";
 import ButtonComponent from "@/src/components/ButtonComponent";
 
 const Home = () => {
@@ -21,6 +16,37 @@ const Home = () => {
   const [editedDescription, setEditedDescription] = useState("");
   const [isSorted, setIsSorted] = useState(false);
   const [sortOrder, setSortOrder] = useState("asc");
+  const wnSize = useWindowSize();
+  const isMobile = wnSize.width < 768 ? true : false;
+
+  //data for chart
+  const completedTasks = tasks.filter((task) => task.completed).length;
+  const incompleteTasks = tasks.length - completedTasks;
+  const hasTasks = tasks.length > 0;
+  const chartData = {
+    labels: ["Completed", "Incomplete"],
+    datasets: [
+      {
+        data: [completedTasks, incompleteTasks],
+        backgroundColor: [
+          "rgba(107, 199, 128, 0.73)",
+          "rgba(255, 99, 132, 0.73)",
+        ],
+        hoverBackgroundColor: [
+          "rgba(107, 199, 128, 1)",
+          "rgba(255, 99, 132, 1)",
+        ],
+      },
+    ],
+  };
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+    },
+  };
 
   const handleAddTask = (e) => {
     e.preventDefault(); //So the browser doesn't refresh after submit
@@ -82,35 +108,144 @@ const Home = () => {
   const sortedTasks = isSorted ? handleSort() : tasks;
 
   return (
-    <Box className={styles.container}>
-      <Box className={styles.header}>Task Manager</Box>
-      <form onSubmit={handleAddTask}>
-        <Box className={styles.formFields}>
-          <InputComponent
-            label="Task"
-            placeholder="Enter task"
-            value={taskName}
-            onChange={(e) => {
-              setTaskName(e.target.value);
+    <Box className={styles.container} display={"flex"} flexDirection={"column"}>
+      <Box className={styles.header} order={0}>
+        Task Manager
+      </Box>
+      {isMobile ? (
+        <>
+          <Box
+            order={1}
+            sx={{
+              flex: 1,
             }}
-            required={true}
-          />
+          >
+            <form onSubmit={handleAddTask}>
+              <Box className={styles.formFields}>
+                <InputComponent
+                  label="Task"
+                  placeholder="Enter task"
+                  value={taskName}
+                  onChange={(e) => {
+                    setTaskName(e.target.value);
+                  }}
+                  required={true}
+                />
 
-          <InputComponent
-            label="Description"
-            placeholder="Description"
-            value={description}
-            onChange={(e) => {
-              setDescription(e.target.value);
+                <InputComponent
+                  label="Description"
+                  placeholder="Description"
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                  }}
+                  multiline
+                  maxRows={2}
+                />
+                <ButtonComponent text={"Add Task"} type={"submit"} />
+              </Box>
+            </form>
+          </Box>
+          <Box
+            order={3}
+            sx={{
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginBlock: "10px",
             }}
-            multiline
-            maxRows={2}
-          />
-          <ButtonComponent text={"Add Task"} type={"submit"} />
+          >
+            {hasTasks ? (
+              <Box
+                sx={{
+                  padding: "10px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <ChartComponent data={chartData} options={chartOptions} />
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                No Task Added Yet. Add tasks to see the chart.
+              </Box>
+            )}
+          </Box>
+        </>
+      ) : (
+        <Box
+          order={1}
+          sx={{
+            display: "flex",
+            gap: "10px",
+            maxHeight: "300px",
+          }}
+        >
+          <Box
+            sx={{
+              flex: 1,
+            }}
+          >
+            <form onSubmit={handleAddTask}>
+              <Box className={styles.formFields}>
+                <InputComponent
+                  label="Task"
+                  placeholder="Enter task"
+                  value={taskName}
+                  onChange={(e) => {
+                    setTaskName(e.target.value);
+                  }}
+                  required={true}
+                />
+
+                <InputComponent
+                  label="Description"
+                  placeholder="Description"
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                  }}
+                  multiline
+                  maxRows={2}
+                />
+                <ButtonComponent text={"Add Task"} type={"submit"} />
+              </Box>
+            </form>
+          </Box>
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {hasTasks ? (
+              <ChartComponent data={chartData} options={chartOptions} />
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                No Task Added Yet
+              </Box>
+            )}
+          </Box>
         </Box>
-      </form>
+      )}
 
-      <Box className={styles.result}>
+      <Box className={styles.result} order={2}>
         <Box className={styles.resultHeader}>Tasks</Box>
         <Box className={styles.sortContainer}>
           {/* Sort Button */}
